@@ -27,7 +27,12 @@ const int defaultBrightness = (35*255)/100;     // dim: 35% brightness
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 char monthsOfTheYr[12][4] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JLY", "AUG", "SPT", "OCT", "NOV", "DEC"};
 
+boolean blink_state = true;
+
 void setup() {
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(LED_BUILTIN, OUTPUT);
+
   Serial.begin(57600);
   delay(1000);
   Serial.println("DS1307RTC Test");
@@ -38,7 +43,6 @@ void setup() {
     abort();
   }
 
-  // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   if (! rtc.isrunning()) {
     Serial.println("RTC is NOT running, let's set the time!");
     // When time needs to be set on a new device, or after a power loss, the
@@ -48,6 +52,12 @@ void setup() {
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }
+  char txtBuffer[256];
+  DateTime now = rtc.now();
+  sprintf(txtBuffer, "Initial time %02d %s %04d, %02d:%02d:%02d", 
+    now.day(), monthsOfTheYr[(now.month()-1)], now.year(), now.hour(), now.minute(), now.second());
+  Serial.println(txtBuffer);
+  Serial.println("Clock setup complete");
 
   // setup matrix
   matrix.addLayer(&indexedLayer1); 
@@ -56,9 +66,15 @@ void setup() {
   matrix.begin();
 
   matrix.setBrightness(defaultBrightness);
+
+  Serial.println("Setup complete");
 }
 
 void loop() {
+  // Each time through the loop, flip the LED on or off
+  digitalWrite(LED_BUILTIN, blink_state ? HIGH : LOW);
+  blink_state = !blink_state;
+
   char txtBuffer[12];
   DateTime now = rtc.now();
 
